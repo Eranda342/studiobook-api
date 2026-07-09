@@ -20,11 +20,12 @@ async function bootstrap() {
     .setTitle('StudioBook API')
     .setDescription('Recording & Podcast Studio Booking REST API')
     .setVersion('1.0')
+    .addBearerAuth()
     .build();
-    
+
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document);
 
   await app.listen(process.env.PORT ?? 3000);
 }
-bootstrap();
+bootstrap().catch((err) => console.error(err));
