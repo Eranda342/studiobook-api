@@ -1,98 +1,444 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# StudioBook API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+StudioBook API is a RESTful backend for a Recording and Podcast Studio Booking Management System. It is built with NestJS, TypeScript, PostgreSQL, Prisma, and JWT authentication.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+This project is being developed as a backend technical assignment. The goal is to demonstrate clean architecture, maintainable code, validation, authentication, database design, and REST API best practices.
 
-## Description
+## Project Status
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+| Module | Status |
+|---|---|
+| Project setup | Complete |
+| PostgreSQL + Prisma | Complete |
+| JWT authentication | Complete |
+| Service management | Complete |
+| Booking management | Next phase |
+| Swagger documentation | Complete for implemented modules |
 
-## Project setup
+## Features Implemented
 
-```bash
-$ npm install
+### Authentication
+
+- User registration
+- User login
+- JWT access token generation
+- Password hashing with bcrypt
+- Protected profile endpoint
+- Duplicate email validation
+- Swagger Bearer Auth support
+
+### Service Management
+
+- Create recording studio services
+- List active services publicly
+- Get service by ID publicly
+- Update services with authentication
+- Delete services with authentication
+- Prevent duplicate service titles using case-insensitive checking
+- Prevent deletion when related bookings exist
+- Prisma Decimal price handling
+
+### Platform Foundation
+
+- Global validation pipe
+- Environment variable validation with Joi
+- PostgreSQL database support
+- Prisma migrations
+- Swagger API documentation
+- Clean NestJS module structure
+- ESLint and Prettier support
+
+## Tech Stack
+
+| Technology | Purpose |
+|---|---|
+| NestJS | Backend framework |
+| TypeScript | Programming language |
+| PostgreSQL | Relational database |
+| Prisma | ORM and database migrations |
+| JWT | Authentication |
+| Passport JWT | JWT strategy integration |
+| bcrypt | Password hashing |
+| class-validator | Request DTO validation |
+| class-transformer | DTO transformation |
+| Swagger | API documentation |
+| Joi | Environment variable validation |
+| Docker | Local PostgreSQL database testing |
+
+## Folder Structure
+
+```text
+src/
+├── auth/
+│   ├── dto/
+│   ├── strategies/
+│   ├── auth.controller.ts
+│   ├── auth.module.ts
+│   └── auth.service.ts
+├── common/
+│   ├── constants/
+│   ├── decorators/
+│   ├── enums/
+│   ├── filters/
+│   ├── guards/
+│   ├── interceptors/
+│   └── utils/
+├── prisma/
+│   ├── prisma.module.ts
+│   └── prisma.service.ts
+├── services/
+│   ├── dto/
+│   ├── services.controller.ts
+│   ├── services.module.ts
+│   └── services.service.ts
+├── users/
+│   ├── users.module.ts
+│   └── users.service.ts
+├── app.controller.ts
+├── app.module.ts
+├── app.service.ts
+└── main.ts
 ```
 
-## Compile and run the project
+## Database Models
 
-```bash
-# development
-$ npm run start
+### User
 
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+```text
+id
+name
+email
+password
+createdAt
+updatedAt
 ```
 
-## Run tests
+### Service
 
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+```text
+id
+title
+description
+duration
+price
+isActive
+createdAt
+updatedAt
 ```
 
-## Deployment
+### Booking
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+```text
+id
+customerName
+customerEmail
+customerPhone
+serviceId
+bookingDate
+bookingTime
+status
+notes
+createdAt
+updatedAt
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### Booking Status Enum
 
-## Resources
+```text
+PENDING
+CONFIRMED
+CANCELLED
+COMPLETED
+```
 
-Check out a few resources that may come in handy when working with NestJS:
+## Prerequisites
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+Make sure these are installed:
 
-## Support
+- Node.js
+- npm
+- Docker Desktop
+- Git
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+PostgreSQL can be installed locally, but Docker is recommended for predictable local testing.
 
-## Stay in touch
+## Environment Variables
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+Create a `.env` file in the project root.
+
+```env
+DATABASE_URL="postgresql://postgres:postgres@localhost:5434/studiobook_db?schema=public"
+JWT_SECRET="studiobook-super-secret-key"
+PORT=3000
+```
+
+A safe template is provided in `.env.example`.
+
+Never commit `.env` to version control.
+
+## Local Database Setup with Docker
+
+The verified local setup uses PostgreSQL inside Docker on host port `5434`.
+
+```bash
+docker run --name studiobook-postgres \
+  -e POSTGRES_USER=postgres \
+  -e POSTGRES_PASSWORD=postgres \
+  -e POSTGRES_DB=studiobook_db \
+  -p 5434:5432 \
+  -d postgres:16
+```
+
+If the container already exists, start it with:
+
+```bash
+docker start studiobook-postgres
+```
+
+To check the container:
+
+```bash
+docker ps
+```
+
+## Installation
+
+```bash
+npm install
+```
+
+## Prisma Setup
+
+Generate the Prisma client:
+
+```bash
+npx prisma generate
+```
+
+Run database migrations:
+
+```bash
+npx prisma migrate dev
+```
+
+Open Prisma Studio:
+
+```bash
+npx prisma studio
+```
+
+## Running the Application
+
+Development mode:
+
+```bash
+npm run start:dev
+```
+
+Production build:
+
+```bash
+npm run build
+npm run start:prod
+```
+
+The API runs by default on:
+
+```text
+http://localhost:3000/api
+```
+
+Swagger documentation is available at:
+
+```text
+http://localhost:3000/docs
+```
+
+## Available Scripts
+
+```bash
+npm run build
+npm run start
+npm run start:dev
+npm run start:prod
+npm run lint
+npm run test
+npm run test:e2e
+npm run test:cov
+```
+
+## API Endpoints
+
+### Health
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| GET | `/api/health` | Public | Check API health |
+
+### Authentication
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| POST | `/api/auth/register` | Public | Register a new user |
+| POST | `/api/auth/login` | Public | Login and receive JWT access token |
+| GET | `/api/auth/me` | Protected | Get current authenticated user |
+
+### Services
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| POST | `/api/services` | Protected | Create a service |
+| GET | `/api/services` | Public | Get active services |
+| GET | `/api/services/:id` | Public | Get service by ID |
+| PATCH | `/api/services/:id` | Protected | Update service |
+| DELETE | `/api/services/:id` | Protected | Delete service |
+
+## Example Requests
+
+### Register
+
+```bash
+curl -X POST http://localhost:3000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Studio Admin",
+    "email": "admin@studiobook.com",
+    "password": "password123"
+  }'
+```
+
+### Login
+
+```bash
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "admin@studiobook.com",
+    "password": "password123"
+  }'
+```
+
+### Get Current User
+
+```bash
+curl http://localhost:3000/api/auth/me \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+### Create Service
+
+```bash
+curl -X POST http://localhost:3000/api/services \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -d '{
+    "title": "Podcast Recording Session",
+    "description": "Professional podcast recording session with studio-grade microphones.",
+    "duration": 60,
+    "price": 50,
+    "isActive": true
+  }'
+```
+
+### Get Services
+
+```bash
+curl http://localhost:3000/api/services
+```
+
+## Validation and Error Handling
+
+The API uses a global validation pipe with:
+
+```text
+whitelist: true
+transform: true
+forbidNonWhitelisted: true
+```
+
+This means:
+
+- Unknown request fields are rejected.
+- DTO validation is enforced globally.
+- Query and body values can be transformed into expected types.
+
+Common responses include:
+
+| Status | Meaning |
+|---|---|
+| 400 | Invalid request or business rule violation |
+| 401 | Missing or invalid authentication token |
+| 404 | Resource not found |
+| 409 | Duplicate resource conflict |
+
+## Business Rules Implemented
+
+### Authentication
+
+- Passwords are hashed before storage.
+- Duplicate email registration is blocked.
+- Password hashes are never returned in API responses.
+- Protected routes require a valid JWT Bearer token.
+
+### Services
+
+- Service title duplicates are blocked using case-insensitive comparison.
+- Public service listing returns active services by default.
+- Service creation, update, and deletion require authentication.
+- Services with existing bookings cannot be deleted.
+
+## Assumptions Made
+
+- Admin/studio staff users are represented by authenticated users.
+- Customers do not need an account to create bookings.
+- Prices are stored as Prisma `Decimal` values in the database and returned as API-friendly values.
+- Service duration is stored in minutes.
+- Service deletion is allowed only when the service has no related bookings.
+- Booking management is planned as the next feature module.
+
+## Future Improvements
+
+- Complete booking management endpoints
+- Add booking pagination, search, and status filtering
+- Add global response interceptor for consistent API responses
+- Add global exception filter for custom error response shape
+- Add Docker Compose for API and PostgreSQL
+- Add seed data for common studio services
+- Add unit tests for Auth, Services, and Bookings modules
+- Add refresh token support
+- Add role-based access control for admin users
+- Add email notifications for booking confirmation
+- Add payment support
+
+## Git Workflow
+
+Recommended commit style:
+
+```text
+feat: implement booking management
+fix: correct validation rule
+docs: update README
+chore: update dependencies
+```
+
+## Submission Notes
+
+This repository should include:
+
+- Source code
+- Prisma schema
+- Prisma migration files
+- `.env.example`
+- README documentation
+- Swagger API documentation through `/docs`
+
+Do not commit:
+
+- `.env`
+- `node_modules`
+- `dist`
+- local database files
 
 ## License
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+This project is created for a technical assignment.
