@@ -15,6 +15,7 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { ResponseMessage } from '../common/decorators/response-message.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { QueryServicesDto } from './dto/query-services.dto';
@@ -27,6 +28,7 @@ export class ServicesController {
   constructor(private readonly servicesService: ServicesService) {}
 
   @Post()
+  @ResponseMessage('Service created successfully')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new service' })
@@ -38,6 +40,7 @@ export class ServicesController {
   }
 
   @Get()
+  @ResponseMessage('Services retrieved successfully')
   @ApiOperation({ summary: 'Get all services' })
   @ApiResponse({ status: 200, description: 'Returns an array of services.' })
   findAll(@Query() query: QueryServicesDto) {
@@ -45,6 +48,7 @@ export class ServicesController {
   }
 
   @Get(':id')
+  @ResponseMessage('Service retrieved successfully')
   @ApiOperation({ summary: 'Get a service by ID' })
   @ApiResponse({ status: 200, description: 'Returns the service.' })
   @ApiResponse({ status: 404, description: 'Service not found.' })
@@ -53,6 +57,7 @@ export class ServicesController {
   }
 
   @Patch(':id')
+  @ResponseMessage('Service updated successfully')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update a service' })
@@ -65,6 +70,7 @@ export class ServicesController {
   }
 
   @Delete(':id')
+  @ResponseMessage('Service deleted successfully')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete a service' })

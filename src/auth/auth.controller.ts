@@ -15,6 +15,7 @@ import {
 } from '@nestjs/swagger';
 import { User } from '@prisma/client';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { ResponseMessage } from '../common/decorators/response-message.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -26,6 +27,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
+  @ResponseMessage('User registered successfully')
   @ApiOperation({ summary: 'Register a new user' })
   @ApiResponse({ status: 201, description: 'User successfully created.' })
   @ApiResponse({ status: 409, description: 'Email already in use.' })
@@ -34,6 +36,7 @@ export class AuthController {
   }
 
   @Post('login')
+  @ResponseMessage('Login successful')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Login user' })
   @ApiResponse({ status: 200, description: 'User successfully logged in.' })
@@ -43,6 +46,7 @@ export class AuthController {
   }
 
   @Get('me')
+  @ResponseMessage('User profile retrieved successfully')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get current user profile' })

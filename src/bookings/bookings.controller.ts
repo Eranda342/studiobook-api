@@ -14,6 +14,7 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { ResponseMessage } from '../common/decorators/response-message.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { BookingsService } from './bookings.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
@@ -26,6 +27,7 @@ export class BookingsController {
   constructor(private readonly bookingsService: BookingsService) {}
 
   @Post()
+  @ResponseMessage('Booking created successfully')
   @ApiOperation({ summary: 'Create a new booking' })
   @ApiResponse({ status: 201, description: 'Booking created successfully.' })
   @ApiResponse({
@@ -39,6 +41,7 @@ export class BookingsController {
   }
 
   @Get()
+  @ResponseMessage('Bookings retrieved successfully')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all bookings with pagination' })
@@ -52,6 +55,7 @@ export class BookingsController {
   }
 
   @Get(':id')
+  @ResponseMessage('Booking retrieved successfully')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get a booking by ID' })
@@ -63,6 +67,7 @@ export class BookingsController {
   }
 
   @Patch(':id/status')
+  @ResponseMessage('Booking status updated successfully')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update booking status' })
@@ -78,6 +83,7 @@ export class BookingsController {
   }
 
   @Patch(':id/cancel')
+  @ResponseMessage('Booking cancelled successfully')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Cancel a booking' })
