@@ -1,0 +1,14 @@
+node_modules
+dist
+coverage
+.git
+.gitignore
+.env
+.env.*
+!.env.example
+*.log
+test-response.js
+test-bookings.js
+regression-test.js
+walkthrough.md
+task.md
