@@ -148,9 +148,7 @@ describe('ServicesService', () => {
       prisma.service.findUnique.mockResolvedValue(existingService as any);
       prisma.service.findFirst.mockResolvedValue(duplicateService as any);
 
-      await expect(
-        service.update('1', { title: 'New Title' }),
-      ).rejects.toThrow(
+      await expect(service.update('1', { title: 'New Title' })).rejects.toThrow(
         new ConflictException('A service with this title already exists'),
       );
 

@@ -74,7 +74,9 @@ describe('BookingsService', () => {
           bookingDate: futureDate.toISOString().slice(0, 10),
           bookingTime: '10:00',
         }),
-      ).rejects.toThrow(new BadRequestException('Cannot book an inactive service'));
+      ).rejects.toThrow(
+        new BadRequestException('Cannot book an inactive service'),
+      );
     });
 
     it('should throw BadRequestException for past booking date', async () => {
@@ -115,7 +117,9 @@ describe('BookingsService', () => {
           bookingTime: '10:00',
         }),
       ).rejects.toThrow(
-        new ConflictException('This service is already booked for the selected date and time'),
+        new ConflictException(
+          'This service is already booked for the selected date and time',
+        ),
       );
     });
 
@@ -183,7 +187,9 @@ describe('BookingsService', () => {
           bookingTime: '10:00',
         }),
       ).rejects.toThrow(
-        new ConflictException('This service is already booked for the selected date and time'),
+        new ConflictException(
+          'This service is already booked for the selected date and time',
+        ),
       );
     });
   });
@@ -239,17 +245,21 @@ describe('BookingsService', () => {
   describe('updateStatus', () => {
     it('should throw NotFoundException if missing', async () => {
       prisma.booking.findUnique.mockResolvedValue(null);
-      await expect(service.updateStatus('1', { status: BookingStatus.CONFIRMED })).rejects.toThrow(
-        new NotFoundException('Booking with ID 1 not found'),
-      );
+      await expect(
+        service.updateStatus('1', { status: BookingStatus.CONFIRMED }),
+      ).rejects.toThrow(new NotFoundException('Booking with ID 1 not found'));
     });
 
     it('should throw BadRequestException if updating completed booking', async () => {
       prisma.booking.findUnique.mockResolvedValue({
         status: BookingStatus.COMPLETED,
       } as any);
-      await expect(service.updateStatus('1', { status: BookingStatus.CONFIRMED })).rejects.toThrow(
-        new BadRequestException('Completed bookings cannot be updated to another status'),
+      await expect(
+        service.updateStatus('1', { status: BookingStatus.CONFIRMED }),
+      ).rejects.toThrow(
+        new BadRequestException(
+          'Completed bookings cannot be updated to another status',
+        ),
       );
     });
 
@@ -257,8 +267,12 @@ describe('BookingsService', () => {
       prisma.booking.findUnique.mockResolvedValue({
         status: BookingStatus.CANCELLED,
       } as any);
-      await expect(service.updateStatus('1', { status: BookingStatus.COMPLETED })).rejects.toThrow(
-        new BadRequestException('Cancelled bookings cannot be marked as completed'),
+      await expect(
+        service.updateStatus('1', { status: BookingStatus.COMPLETED }),
+      ).rejects.toThrow(
+        new BadRequestException(
+          'Cancelled bookings cannot be marked as completed',
+        ),
       );
     });
 
@@ -271,7 +285,9 @@ describe('BookingsService', () => {
         service: { price: new Prisma.Decimal('10') },
       } as any);
 
-      const result = await service.updateStatus('1', { status: BookingStatus.CONFIRMED });
+      const result = await service.updateStatus('1', {
+        status: BookingStatus.CONFIRMED,
+      });
       expect(prisma.booking.update).toHaveBeenCalledWith({
         where: { id: '1' },
         data: { status: BookingStatus.CONFIRMED },

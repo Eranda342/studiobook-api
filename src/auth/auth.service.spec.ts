@@ -53,7 +53,11 @@ describe('AuthService', () => {
       };
       usersService.create.mockResolvedValue(createdUser);
 
-      const result = await service.register({ name: 'Test', email: 'test@example.com', password: 'plainPassword' });
+      const result = await service.register({
+        name: 'Test',
+        email: 'test@example.com',
+        password: 'plainPassword',
+      });
 
       expect(bcrypt.hash).toHaveBeenCalledWith('plainPassword', 10);
       expect(usersService.create).toHaveBeenCalledWith({
@@ -81,7 +85,10 @@ describe('AuthService', () => {
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
       jwtService.sign.mockReturnValue('valid_token');
 
-      const result = await service.login({ email: 'test@example.com', password: 'plainPassword' });
+      const result = await service.login({
+        email: 'test@example.com',
+        password: 'plainPassword',
+      });
 
       expect(usersService.findByEmail).toHaveBeenCalledWith('test@example.com');
       expect(bcrypt.compare).toHaveBeenCalledWith(
@@ -99,7 +106,10 @@ describe('AuthService', () => {
       usersService.findByEmail.mockResolvedValue(null);
 
       await expect(
-        service.login({ email: 'unknown@example.com', password: 'plainPassword' }),
+        service.login({
+          email: 'unknown@example.com',
+          password: 'plainPassword',
+        }),
       ).rejects.toThrow(new UnauthorizedException('Invalid credentials'));
       expect(bcrypt.compare).not.toHaveBeenCalled();
       expect(jwtService.sign).not.toHaveBeenCalled();
