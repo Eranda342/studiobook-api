@@ -8,3 +8,6 @@ coverage
 *.env
 
 /generated/prisma
+
+.env.test
+coverage
