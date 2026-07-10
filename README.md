@@ -103,7 +103,7 @@ Use `npm run prisma:migrate:dev` only when you have deliberately changed the Pri
 | `SEED_ADMIN_EMAIL` | Optional | Email for seed admin account | *(leave blank in production)* |
 | `SEED_ADMIN_PASSWORD` | Optional | Password for seed admin account | *(leave blank in production)* |
 
-> **Note:** `SEED_ADMIN_*` values are only for local development seed data. Leave all three blank to seed only studio services. Set all three or none — partial configuration is an error.
+> **Note:** `SEED_ADMIN_*` values are only for local development seed data. `SEED_ADMIN_EMAIL` and `SEED_ADMIN_PASSWORD` must be supplied together. The password must be at least 6 characters. `SEED_ADMIN_NAME` is optional and defaults to `Studio Admin`.
 
 ## Available Scripts
 
@@ -114,7 +114,7 @@ Use `npm run prisma:migrate:dev` only when you have deliberately changed the Pri
 | `npm run start:dev` | Start with live reload |
 | `npm run start:prod` | Start the production build |
 | `npm run lint` | Lint and auto-fix source files |
-| `npm test` | Run all Jest tests |
+| `npm test` | Run the default unit-test Jest configuration |
 | `npm run test:unit` | Run unit tests sequentially |
 | `npm run test:cov` | Run unit tests with coverage |
 | `npm run test:e2e` | Run E2E tests (requires `.env` with test DB) |
@@ -218,15 +218,18 @@ In Swagger, click the **Authorize** button and paste the token.
 
 ## Booking Status Lifecycle
 
-```
-PENDING -> CONFIRMED -> COMPLETED
-        -> CANCELLED
-```
+Available statuses:
+
+PENDING
+CONFIRMED
+CANCELLED
+COMPLETED
 
 | Rule | Description |
 |---|---|
 | Completed bookings | Cannot be updated or cancelled |
 | Cancelled bookings | Cannot be moved to COMPLETED |
+| Other statuses | Other status changes are currently accepted by the status endpoint |
 
 ## Business Rules
 

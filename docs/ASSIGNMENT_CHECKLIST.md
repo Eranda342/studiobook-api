@@ -10,7 +10,7 @@ This document maps each assignment requirement to its implementation and verific
 | TypeScript | ✅ Complete | Strict TypeScript throughout; `tsconfig.json` with strict settings | `npm run build` passes; 0 type errors |
 | PostgreSQL database | ✅ Complete | PostgreSQL 16 via Docker Compose or local install | `docker compose ps` shows `studiobook-db` healthy |
 | Prisma ORM | ✅ Complete | Prisma 7 with `@prisma/adapter-pg`; schema in `prisma/schema.prisma` | `npm run prisma:generate` succeeds |
-| JWT registration | ✅ Complete | `POST /api/auth/register` — email uniqueness, bcrypt hash, returns JWT | E2E test: `/api/auth/register (POST) - Valid` |
+| JWT registration | ✅ Complete | `POST /api/auth/register` creates a user, hashes the password, and returns sanitized user data. (JWT issuance occurs through the login endpoint). | E2E test: `/api/auth/register (POST) - Valid` |
 | JWT login | ✅ Complete | `POST /api/auth/login` — bcrypt compare, returns JWT | E2E test: `/api/auth/login (POST) - Valid Login` |
 | Service CRUD | ✅ Complete | `POST /api/services`, `GET /api/services`, `GET /api/services/:id`, `PATCH /api/services/:id`, `DELETE /api/services/:id` | E2E tests: Services section |
 | Public booking creation | ✅ Complete | `POST /api/bookings` — no auth required | E2E test: `/api/bookings (POST) - Public Creation` |
@@ -44,7 +44,7 @@ This document maps each assignment requirement to its implementation and verific
 | Global validation | ✅ Complete | `ValidationPipe` registered in `configureApp()` | Applied to all routes |
 | Global exception filter | ✅ Complete | `AllExceptionsFilter` registered via `APP_FILTER` in `AppModule` | Unit tests; E2E error responses |
 | Standardized responses | ✅ Complete | `ResponseInterceptor` registered via `APP_INTERCEPTOR` in `AppModule` | Unit tests; E2E response shape verification |
-| Duplicate-slot prevention | ✅ Complete | `findFirst` check + P2002 fallback in `BookingsService.create` | E2E test: `Duplicate Slot`; Unit test: `ConflictException` |
+| Duplicate-slot prevention | ✅ Complete | Application-level `findFirst` check + database composite unique constraint + `P2002` fallback in `BookingsService.create` | E2E test: `Duplicate Slot`; Unit test: `ConflictException` |
 | Unit tests | ✅ Complete | 5 suites, 39 tests in `src/**/*.spec.ts` | `npm run test:unit` — all pass |
 | E2E tests | ✅ Complete | 1 suite, 20 tests in `test/app.e2e-spec.ts` | `npm run test:e2e:run` — all pass |
 | Seed data | ✅ Complete | `prisma/seed.cjs` — 4 studio services, optional admin, idempotent | Verified twice — no duplicates created |
@@ -70,4 +70,4 @@ This document maps each assignment requirement to its implementation and verific
 | `.env.test` not tracked | ✅ | `git ls-files .env.test` — empty |
 | `coverage/` not tracked | ✅ | `git ls-files coverage` — empty |
 | Working tree clean | ✅ | `git status` |
-| Latest commit | `862f86d` → Phase 8 commit | `git log -1 --oneline` |
+| Latest submission state | Verified on main branch | `git log -1 --oneline` |

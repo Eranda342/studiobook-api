@@ -1,4 +1,4 @@
-﻿/**
+/**
  * prisma/seed.cjs
  *
  * Idempotent development seed script for the StudioBook API.
@@ -9,8 +9,9 @@
  *   node prisma/seed.cjs
  *
  * Optional administrator account:
- *   Set SEED_ADMIN_NAME, SEED_ADMIN_EMAIL, and SEED_ADMIN_PASSWORD in .env
- *   Leave all three unset to seed only studio services.
+ *   Set SEED_ADMIN_EMAIL and SEED_ADMIN_PASSWORD in .env
+ *   Leave both unset to seed only studio services.
+ *   SEED_ADMIN_NAME is optional (defaults to Studio Admin).
  */
 
 'use strict';
@@ -118,9 +119,10 @@ async function seedAdmin() {
   const emailProvided = Boolean(adminEmail && adminEmail.trim());
   const passwordProvided = Boolean(adminPassword && adminPassword.trim());
 
-  // All three absent — skip silently
-  if (!adminName && !emailProvided && !passwordProvided) {
-    console.log('\n--- Admin seed skipped (SEED_ADMIN_* not configured) ---');
+  if (!emailProvided && !passwordProvided) {
+    console.log(
+      '\n--- Admin seed skipped (SEED_ADMIN_EMAIL and SEED_ADMIN_PASSWORD not configured) ---',
+    );
     return;
   }
 
@@ -133,9 +135,9 @@ async function seedAdmin() {
     );
   }
 
-  if (adminPassword.length < 8) {
+  if (adminPassword.length < 6) {
     throw new Error(
-      'SEED_ADMIN_PASSWORD must be at least 8 characters ' +
+      'SEED_ADMIN_PASSWORD must be at least 6 characters ' +
         'to meet the API registration requirements.',
     );
   }
@@ -144,15 +146,16 @@ async function seedAdmin() {
 
   const normalizedEmail = adminEmail.trim().toLowerCase();
   const hashedPassword = await bcrypt.hash(adminPassword, 10);
+  const finalName = adminName && adminName.trim() ? adminName.trim() : 'Studio Admin';
 
   await prisma.user.upsert({
     where: { email: normalizedEmail },
     update: {
-      name: adminName ? adminName.trim() : undefined,
+      name: finalName,
       password: hashedPassword,
     },
     create: {
-      name: adminName ? adminName.trim() : 'Studio Admin',
+      name: finalName,
       email: normalizedEmail,
       password: hashedPassword,
     },
@@ -177,7 +180,8 @@ main()
     await pool.end();
   })
   .catch(async (error) => {
-    console.error('\nDatabase seed failed:', error.message ?? error);
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('\nDatabase seed failed:', message);
     await prisma.$disconnect();
     await pool.end();
     process.exit(1);

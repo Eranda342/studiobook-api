@@ -75,7 +75,7 @@ graph TD
 1. **HTTP request** arrives at the NestJS platform adapter.
 2. **Global prefix** `/api` is matched by the router.
 3. **ValidationPipe** parses and validates the request DTO. Unknown fields are rejected. DTOs are transformed (e.g., strings to numbers).
-4. **JwtAuthGuard** (when applied to the route) extracts and verifies the Bearer token. The JWT strategy populates `req.user` with `{ userId, email }`.
+4. **JwtAuthGuard** (when applied to the route) extracts and verifies the Bearer token. The JWT strategy reads `sub` and `email` from the token, retrieves the current user from the database, removes the password, and attaches the sanitized user object to `req.user`.
 5. **Controller** receives the validated DTO and delegates to the service.
 6. **Service** applies business logic (rules, existence checks, conflict detection) and calls `PrismaService`.
 7. **PrismaService** executes the database query via the `pg` Pool and Prisma adapter.
@@ -86,7 +86,7 @@ graph TD
 
 1. **Registration** (`POST /api/auth/register`): The DTO is validated, the email is checked for uniqueness, the password is hashed with bcrypt (cost 10), and the user is stored.
 2. **Login** (`POST /api/auth/login`): Email lookup, bcrypt comparison, JWT signed with `{ sub: userId, email }` and configured `JWT_SECRET` / expiry.
-3. **Protected routes**: `JwtAuthGuard` extracts the Bearer token. `JwtStrategy` validates the payload and attaches the user object.
+3. **Protected routes**: `JwtAuthGuard` extracts the Bearer token. `JwtStrategy` reads `sub` and `email` from the token, retrieves the current user from the database, removes the password, and attaches the sanitized user object to `req.user`.
 4. **Current user**: `@CurrentUser()` decorator extracts `req.user` from the execution context.
 
 ## Data Model
@@ -139,7 +139,7 @@ erDiagram
 2. Service must be active (`isActive = true`).
 3. Booking date must not be in the past (midnight comparison).
 4. Booking time must match `HH:mm` format (enforced by DTO regex).
-5. No existing booking with the same `serviceId + bookingDate + bookingTime` (application-level check, with Prisma P2002 fallback).
+5. No existing booking with the same `serviceId + bookingDate + bookingTime` (three-layer protection: application-level `findFirst`, database composite unique constraint, and Prisma P2002 fallback).
 
 **Status management:**
 - `COMPLETED` is terminal — no further status changes or cancellations.
@@ -166,7 +166,7 @@ erDiagram
 |---|---|
 | `db` service | PostgreSQL 16 Alpine. Named volume `postgres_data`. Health checked via `pg_isready`. |
 | `app` service | Multi-stage Node.js image (builder + production). Depends on `db` health. |
-| Startup command | `npx prisma migrate deploy && node dist/main` — migrations are applied before the API starts. |
+| Startup command | `npx prisma generate && npx prisma migrate deploy && node dist/main` — migrations are applied before the API starts. |
 | Internal hostname | The `app` container reaches PostgreSQL at `db:5432` (Docker Compose internal network). |
 | Host exposure | `db` is exposed on host port `5434`. `app` is exposed on host port `3000`. |
 | Seed | Explicit — `docker compose exec app npm run prisma:seed`. Never automatic. |
@@ -189,7 +189,7 @@ erDiagram
 |---|---|
 | **Public booking creation** | Customers do not need an account — reduces friction for studio bookings. |
 | **Staff-only management** | Any authenticated user can manage services and bookings. No role differentiation was required. |
-| **Exact-slot duplicate prevention** | Application-level `findFirst` check before insert, with Prisma P2002 fallback. Chosen over a database unique constraint because `bookingDate` is a `DateTime` and normalizing it adds complexity. |
+| **Exact-slot duplicate prevention** | Three-layer protection: 1. Application-level `findFirst` check provides a friendly conflict response. 2. Prisma schema contains `@@unique([serviceId, bookingDate, bookingTime])`. 3. A Prisma `P2002` error is converted to `ConflictException` as a concurrency-safe fallback. |
 | **Case-insensitive service title uniqueness** | `mode: 'insensitive'` Prisma query instead of a database unique index. Title uniqueness is a UX rule, not a data integrity constraint. |
 | **Prisma Decimal conversion** | `price.toNumber()` in `mapBooking` converts `Prisma.Decimal` to a plain number before returning it in the response, avoiding JSON serialization issues. |
 | **pg Pool in PrismaService** | Storing the pool as a private field allows `onModuleDestroy` to call `pool.end()`, preventing Jest open-handle warnings and ensuring clean shutdown in production. |
