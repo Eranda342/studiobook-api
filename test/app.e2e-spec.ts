@@ -1,11 +1,51 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
+import request, { Response } from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
 import { configureApp } from './../src/configure-app';
 import { PrismaService } from './../src/prisma/prisma.service';
 import { BookingStatus } from '@prisma/client';
+
+type JsonObject = Record<string, unknown>;
+
+function isJsonObject(value: unknown): value is JsonObject {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function getResponseBody(response: Response): JsonObject {
+  const body = response.body as unknown;
+
+  if (!isJsonObject(body)) {
+    throw new Error('Expected the HTTP response body to be a JSON object');
+  }
+
+  return body;
+}
+
+function requireObject(value: unknown, field: string): JsonObject {
+  if (!isJsonObject(value)) {
+    throw new Error(`Expected ${field} to be a JSON object`);
+  }
+
+  return value;
+}
+
+function requireString(value: unknown, field: string): string {
+  if (typeof value !== 'string') {
+    throw new Error(`Expected ${field} to be a string`);
+  }
+
+  return value;
+}
+
+function requireArray(value: unknown, field: string): unknown[] {
+  if (!Array.isArray(value)) {
+    throw new Error(`Expected ${field} to be an array`);
+  }
+
+  return value;
+}
 
 if (process.env.NODE_ENV !== 'test') {
   throw new Error('NODE_ENV must be "test" during E2E testing.');
@@ -65,12 +105,13 @@ describe('StudioBook API (e2e)', () => {
       return request(httpServer)
         .get('/api/health')
         .expect(200)
-        .expect((res) => {
-          expect(res.body).toEqual({
+        .expect((res: Response) => {
+          const body = getResponseBody(res);
+          expect(body).toEqual({
             success: true,
             message: 'StudioBook API is running',
           });
-          expect(res.body.data).toBeUndefined();
+          expect(body.data).toBeUndefined();
         });
     });
   });
@@ -85,11 +126,13 @@ describe('StudioBook API (e2e)', () => {
           password: userPassword,
         })
         .expect(201)
-        .expect((res) => {
-          expect(res.body.success).toBe(true);
-          expect(res.body.data).toHaveProperty('id');
-          expect(res.body.data).not.toHaveProperty('password');
-          expect(res.body.data.email).toBe(userEmail);
+        .expect((res: Response) => {
+          const body = getResponseBody(res);
+          const data = requireObject(body.data, 'data');
+          expect(body.success).toBe(true);
+          expect(data).toHaveProperty('id');
+          expect(data).not.toHaveProperty('password');
+          expect(data.email).toBe(userEmail);
         });
     });
 
@@ -113,10 +156,11 @@ describe('StudioBook API (e2e)', () => {
           password: '123',
         })
         .expect(400)
-        .expect((res) => {
-          expect(res.body.success).toBe(false);
-          expect(res.body.message).toBe('Validation failed');
-          expect(Array.isArray(res.body.errors)).toBe(true);
+        .expect((res: Response) => {
+          const body = getResponseBody(res);
+          expect(body.success).toBe(false);
+          expect(body.message).toBe('Validation failed');
+          expect(requireArray(body.errors, 'errors')).not.toHaveLength(0);
         });
     });
 
@@ -138,10 +182,12 @@ describe('StudioBook API (e2e)', () => {
           password: userPassword,
         })
         .expect(200)
-        .expect((res) => {
-          expect(res.body.success).toBe(true);
-          expect(res.body.data).toHaveProperty('accessToken');
-          accessToken = res.body.data.accessToken;
+        .expect((res: Response) => {
+          const body = getResponseBody(res);
+          const data = requireObject(body.data, 'data');
+          expect(body.success).toBe(true);
+          expect(data).toHaveProperty('accessToken');
+          accessToken = requireString(data.accessToken, 'data.accessToken');
         });
     });
   });
@@ -156,10 +202,12 @@ describe('StudioBook API (e2e)', () => {
         .get('/api/auth/me')
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
-        .expect((res) => {
-          expect(res.body.success).toBe(true);
-          expect(res.body.data.email).toBe(userEmail);
-          expect(res.body.data).not.toHaveProperty('password');
+        .expect((res: Response) => {
+          const body = getResponseBody(res);
+          const data = requireObject(body.data, 'data');
+          expect(body.success).toBe(true);
+          expect(data.email).toBe(userEmail);
+          expect(data).not.toHaveProperty('password');
         });
     });
   });
@@ -186,11 +234,13 @@ describe('StudioBook API (e2e)', () => {
         .set('Authorization', `Bearer ${accessToken}`)
         .send(servicePayload)
         .expect(201)
-        .expect((res) => {
-          expect(res.body.success).toBe(true);
-          expect(res.body.data.title).toBe(serviceTitle);
-          expect(res.body.data.price).toBe(150.0);
-          createdServiceId = res.body.data.id;
+        .expect((res: Response) => {
+          const body = getResponseBody(res);
+          const data = requireObject(body.data, 'data');
+          expect(body.success).toBe(true);
+          expect(data.title).toBe(serviceTitle);
+          expect(data.price).toBe(150.0);
+          createdServiceId = requireString(data.id, 'data.id');
         });
     });
 
@@ -206,10 +256,12 @@ describe('StudioBook API (e2e)', () => {
       return request(httpServer)
         .get('/api/services')
         .expect(200)
-        .expect((res) => {
-          expect(res.body.success).toBe(true);
-          const found = res.body.data.some(
-            (s: any) => s.id === createdServiceId,
+        .expect((res: Response) => {
+          const body = getResponseBody(res);
+          const data = requireArray(body.data, 'data');
+          expect(body.success).toBe(true);
+          const found = data.some(
+            (item) => isJsonObject(item) && item.id === createdServiceId,
           );
           expect(found).toBe(true);
         });
@@ -238,10 +290,12 @@ describe('StudioBook API (e2e)', () => {
         .post('/api/bookings')
         .send(bookingPayload())
         .expect(201)
-        .expect((res) => {
-          expect(res.body.success).toBe(true);
-          expect(res.body.data.status).toBe(BookingStatus.PENDING);
-          createdBookingId = res.body.data.id;
+        .expect((res: Response) => {
+          const body = getResponseBody(res);
+          const data = requireObject(body.data, 'data');
+          expect(body.success).toBe(true);
+          expect(data.status).toBe(BookingStatus.PENDING);
+          createdBookingId = requireString(data.id, 'data.id');
         });
     });
 
@@ -261,10 +315,11 @@ describe('StudioBook API (e2e)', () => {
         .get('/api/bookings')
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
-        .expect((res) => {
-          expect(res.body.success).toBe(true);
-          expect(Array.isArray(res.body.data)).toBe(true);
-          expect(res.body.meta).toBeDefined();
+        .expect((res: Response) => {
+          const body = getResponseBody(res);
+          expect(body.success).toBe(true);
+          expect(Array.isArray(body.data)).toBe(true);
+          expect(isJsonObject(body.meta)).toBe(true);
         });
     });
 
@@ -274,8 +329,10 @@ describe('StudioBook API (e2e)', () => {
         .set('Authorization', `Bearer ${accessToken}`)
         .send({ status: BookingStatus.CONFIRMED })
         .expect(200)
-        .expect((res) => {
-          expect(res.body.data.status).toBe(BookingStatus.CONFIRMED);
+        .expect((res: Response) => {
+          const body = getResponseBody(res);
+          const data = requireObject(body.data, 'data');
+          expect(data.status).toBe(BookingStatus.CONFIRMED);
         });
     });
 
@@ -284,8 +341,10 @@ describe('StudioBook API (e2e)', () => {
         .patch(`/api/bookings/${createdBookingId}/cancel`)
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
-        .expect((res) => {
-          expect(res.body.data.status).toBe(BookingStatus.CANCELLED);
+        .expect((res: Response) => {
+          const body = getResponseBody(res);
+          const data = requireObject(body.data, 'data');
+          expect(data.status).toBe(BookingStatus.CANCELLED);
         });
     });
 

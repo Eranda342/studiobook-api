@@ -54,7 +54,11 @@ describe('AllExceptionsFilter', () => {
         path: '/api/test',
       }),
     );
-    expect(typeof mockJson.mock.calls[0][0].timestamp).toBe('string');
+    const call0 = (mockJson.mock.calls as unknown[][])[0][0] as Record<
+      string,
+      unknown
+    >;
+    expect(typeof call0.timestamp).toBe('string');
   });
 
   it('should format Validation exception properly (array of messages)', () => {
@@ -106,7 +110,10 @@ describe('AllExceptionsFilter', () => {
     expect(loggerErrorSpy).toHaveBeenCalled();
     expect(mockStatus).toHaveBeenCalledWith(HttpStatus.INTERNAL_SERVER_ERROR);
 
-    const payload = mockJson.mock.calls[0][0];
+    const payload = (mockJson.mock.calls as unknown[][])[0][0] as Record<
+      string,
+      unknown
+    >;
     expect(payload).toEqual(
       expect.objectContaining({
         success: false,
@@ -117,7 +124,9 @@ describe('AllExceptionsFilter', () => {
     );
     expect(payload.errors).toBeUndefined();
     expect(payload.stack).toBeUndefined();
-    expect(payload.message).not.toContain('Database connection lost');
+    expect(
+      typeof payload.message === 'string' && payload.message,
+    ).not.toContain('Database connection lost');
   });
 
   it('should format object response without a valid message', () => {

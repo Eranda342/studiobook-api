@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 import { CallHandler, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ResponseInterceptor } from './response.interceptor';
@@ -124,7 +125,7 @@ describe('ResponseInterceptor', () => {
       message: 'Custom message',
       data: { id: 1 },
     });
-    expect(reflector.getAllAndOverride).toHaveBeenCalledWith(
+    expect(jest.mocked(reflector.getAllAndOverride)).toHaveBeenCalledWith(
       RESPONSE_MESSAGE_KEY,
       [ctx.getHandler(), ctx.getClass()],
     );

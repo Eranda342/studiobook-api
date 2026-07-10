@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 import { Test, TestingModule } from '@nestjs/testing';
 import { ServicesService } from './services.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -45,7 +46,7 @@ describe('ServicesService', () => {
 
   describe('create', () => {
     it('should create a valid service and map Prisma Decimal price to a number', async () => {
-      prisma.service.findFirst.mockResolvedValue(null);
+      jest.mocked(prisma.service.findFirst).mockResolvedValue(null);
       const createdService = {
         id: '1',
         title: 'New Service',
@@ -56,7 +57,7 @@ describe('ServicesService', () => {
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-      prisma.service.create.mockResolvedValue(createdService as any);
+      jest.mocked(prisma.service.create).mockResolvedValue(createdService);
 
       const result = await service.create({
         title: 'New Service',
@@ -66,7 +67,9 @@ describe('ServicesService', () => {
         isActive: true,
       });
 
-      expect(prisma.service.create).toHaveBeenCalled();
+      expect(
+        jest.mocked(prisma.service.create).mock.calls.length,
+      ).toBeGreaterThan(0);
       expect(result.price).toBe(75);
     });
 
@@ -81,7 +84,7 @@ describe('ServicesService', () => {
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-      prisma.service.findFirst.mockResolvedValue(existingService as any);
+      jest.mocked(prisma.service.findFirst).mockResolvedValue(existingService);
 
       await expect(
         service.create({
@@ -98,25 +101,29 @@ describe('ServicesService', () => {
 
   describe('findAll', () => {
     it('should default list filter to { isActive: true }', async () => {
-      prisma.service.findMany.mockResolvedValue([]);
+      jest.mocked(prisma.service.findMany).mockResolvedValue([]);
       await service.findAll();
-      expect(prisma.service.findMany).toHaveBeenCalledWith({
-        where: { isActive: true },
-      });
+      expect(jest.mocked(prisma.service.findMany).mock.calls).toContainEqual([
+        {
+          where: { isActive: true },
+        },
+      ]);
     });
 
     it('should not apply active filter if includeInactive is true', async () => {
-      prisma.service.findMany.mockResolvedValue([]);
+      jest.mocked(prisma.service.findMany).mockResolvedValue([]);
       await service.findAll(true);
-      expect(prisma.service.findMany).toHaveBeenCalledWith({
-        where: {},
-      });
+      expect(jest.mocked(prisma.service.findMany).mock.calls).toContainEqual([
+        {
+          where: {},
+        },
+      ]);
     });
   });
 
   describe('findOne', () => {
     it('should throw NotFoundException if service is missing', async () => {
-      prisma.service.findUnique.mockResolvedValue(null);
+      jest.mocked(prisma.service.findUnique).mockResolvedValue(null);
       await expect(service.findOne('1')).rejects.toThrow(
         new NotFoundException('Service with ID 1 not found'),
       );
@@ -145,19 +152,21 @@ describe('ServicesService', () => {
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-      prisma.service.findUnique.mockResolvedValue(existingService as any);
-      prisma.service.findFirst.mockResolvedValue(duplicateService as any);
+      jest.mocked(prisma.service.findUnique).mockResolvedValue(existingService);
+      jest.mocked(prisma.service.findFirst).mockResolvedValue(duplicateService);
 
       await expect(service.update('1', { title: 'New Title' })).rejects.toThrow(
         new ConflictException('A service with this title already exists'),
       );
 
-      expect(prisma.service.findFirst).toHaveBeenCalledWith({
-        where: {
-          title: { equals: 'New Title', mode: 'insensitive' },
-          id: { not: '1' },
+      expect(jest.mocked(prisma.service.findFirst).mock.calls).toContainEqual([
+        {
+          where: {
+            title: { equals: 'New Title', mode: 'insensitive' },
+            id: { not: '1' },
+          },
         },
-      });
+      ]);
     });
   });
 
@@ -173,13 +182,13 @@ describe('ServicesService', () => {
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-      prisma.service.findUnique.mockResolvedValue(existingService as any);
-      prisma.booking.count.mockResolvedValue(1);
+      jest.mocked(prisma.service.findUnique).mockResolvedValue(existingService);
+      jest.mocked(prisma.booking.count).mockResolvedValue(1);
 
       await expect(service.remove('1')).rejects.toThrow(
         new BadRequestException('Cannot delete service with existing bookings'),
       );
-      expect(prisma.service.delete).not.toHaveBeenCalled();
+      expect(jest.mocked(prisma.service.delete).mock.calls.length).toBe(0);
     });
 
     it('should delete service and return success message if no bookings exist', async () => {
@@ -193,13 +202,15 @@ describe('ServicesService', () => {
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-      prisma.service.findUnique.mockResolvedValue(existingService as any);
-      prisma.booking.count.mockResolvedValue(0);
+      jest.mocked(prisma.service.findUnique).mockResolvedValue(existingService);
+      jest.mocked(prisma.booking.count).mockResolvedValue(0);
 
       const result = await service.remove('1');
-      expect(prisma.service.delete).toHaveBeenCalledWith({
-        where: { id: '1' },
-      });
+      expect(jest.mocked(prisma.service.delete).mock.calls).toContainEqual([
+        {
+          where: { id: '1' },
+        },
+      ]);
       expect(result).toEqual({ message: 'Service deleted successfully' });
     });
   });
