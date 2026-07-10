@@ -22,7 +22,7 @@ if (
 describe('StudioBook API (e2e)', () => {
   let app: INestApplication<App>;
   let prisma: PrismaService;
-  let httpServer: any;
+  let httpServer: App;
 
   let accessToken: string;
   let createdServiceId: string;
