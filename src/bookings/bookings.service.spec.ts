@@ -7,7 +7,55 @@ import {
   ConflictException,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma, BookingStatus } from '@prisma/client';
+import { Booking, BookingStatus, Prisma, Service } from '@prisma/client';
+
+// ---------------------------------------------------------------------------
+// Typed mock factory helpers
+// ---------------------------------------------------------------------------
+
+/** Build a minimal Booking shape accepted by mockResolvedValue. */
+function mockBooking(
+  overrides: Partial<Booking & { service?: Partial<Service> }>,
+): Booking & { service?: Service } {
+  const base: Booking = {
+    id: 'booking-id',
+    customerName: 'Customer',
+    customerEmail: 'customer@example.com',
+    customerPhone: null,
+    serviceId: 'service-id',
+    bookingDate: new Date(),
+    bookingTime: '10:00',
+    status: BookingStatus.PENDING,
+    notes: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+  const { service, ...rest } = overrides;
+  const merged: Booking = { ...base, ...rest };
+  if (service !== undefined) {
+    return { ...merged, service: service as Service };
+  }
+  return merged;
+}
+
+/** Build a minimal Service shape. */
+function mockService(overrides: Partial<Service>): Service {
+  return {
+    id: 'service-id',
+    title: 'Test Service',
+    description: 'Desc',
+    duration: 60,
+    price: new Prisma.Decimal('100.00'),
+    isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    ...overrides,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
 
 describe('BookingsService', () => {
   let service: BookingsService;
@@ -61,10 +109,9 @@ describe('BookingsService', () => {
     });
 
     it('should throw BadRequestException if service is inactive', async () => {
-      jest.mocked(prisma.service.findUnique).mockResolvedValue({
-        id: '1',
-        isActive: false,
-      } as any);
+      jest
+        .mocked(prisma.service.findUnique)
+        .mockResolvedValue(mockService({ isActive: false }));
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + 7);
       await expect(
@@ -81,10 +128,9 @@ describe('BookingsService', () => {
     });
 
     it('should throw BadRequestException for past booking date', async () => {
-      jest.mocked(prisma.service.findUnique).mockResolvedValue({
-        id: '1',
-        isActive: true,
-      } as any);
+      jest
+        .mocked(prisma.service.findUnique)
+        .mockResolvedValue(mockService({ isActive: true }));
       const pastDate = new Date();
       pastDate.setDate(pastDate.getDate() - 1);
       await expect(
@@ -101,13 +147,12 @@ describe('BookingsService', () => {
     });
 
     it('should throw ConflictException if duplicate slot exists', async () => {
-      jest.mocked(prisma.service.findUnique).mockResolvedValue({
-        id: '1',
-        isActive: true,
-      } as any);
+      jest
+        .mocked(prisma.service.findUnique)
+        .mockResolvedValue(mockService({ isActive: true }));
       jest
         .mocked(prisma.booking.findFirst)
-        .mockResolvedValue({ id: '2' } as any);
+        .mockResolvedValue(mockBooking({ id: 'existing' }));
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + 7);
 
@@ -127,30 +172,21 @@ describe('BookingsService', () => {
     });
 
     it('should create valid booking and map Decimal service price', async () => {
-      jest.mocked(prisma.service.findUnique).mockResolvedValue({
-        id: '1',
-        isActive: true,
-      } as any);
+      jest
+        .mocked(prisma.service.findUnique)
+        .mockResolvedValue(mockService({ isActive: true }));
       jest.mocked(prisma.booking.findFirst).mockResolvedValue(null);
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + 7);
       const bookingDate = futureDate.toISOString().slice(0, 10);
 
-      const createdBooking = {
-        id: 'booking1',
-        customerName: 'Test',
-        customerEmail: 'test@example.com',
-        serviceId: '1',
-        bookingDate,
-        bookingTime: '10:00',
-        status: BookingStatus.PENDING,
-        service: {
-          price: new Prisma.Decimal('100.50'),
-        },
-      };
-      jest
-        .mocked(prisma.booking.create)
-        .mockResolvedValue(createdBooking as any);
+      jest.mocked(prisma.booking.create).mockResolvedValue(
+        mockBooking({
+          id: 'booking1',
+          status: BookingStatus.PENDING,
+          service: { price: new Prisma.Decimal('100.50') },
+        }),
+      );
 
       const result = await service.create({
         customerName: 'Test',
@@ -161,14 +197,16 @@ describe('BookingsService', () => {
       });
 
       expect(jest.mocked(prisma.booking.create)).toHaveBeenCalled();
-      expect(result.service.price).toBe(100.5);
+
+      expect(
+        (result as unknown as { service: { price: number } }).service.price,
+      ).toBe(100.5);
     });
 
     it('should convert Prisma P2002 to ConflictException', async () => {
-      jest.mocked(prisma.service.findUnique).mockResolvedValue({
-        id: '1',
-        isActive: true,
-      } as any);
+      jest
+        .mocked(prisma.service.findUnique)
+        .mockResolvedValue(mockService({ isActive: true }));
       jest.mocked(prisma.booking.findFirst).mockResolvedValue(null);
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + 7);
@@ -256,9 +294,9 @@ describe('BookingsService', () => {
     });
 
     it('should throw BadRequestException if updating completed booking', async () => {
-      jest.mocked(prisma.booking.findUnique).mockResolvedValue({
-        status: BookingStatus.COMPLETED,
-      } as any);
+      jest
+        .mocked(prisma.booking.findUnique)
+        .mockResolvedValue(mockBooking({ status: BookingStatus.COMPLETED }));
       await expect(
         service.updateStatus('1', { status: BookingStatus.CONFIRMED }),
       ).rejects.toThrow(
@@ -269,9 +307,9 @@ describe('BookingsService', () => {
     });
 
     it('should throw BadRequestException if updating cancelled to completed', async () => {
-      jest.mocked(prisma.booking.findUnique).mockResolvedValue({
-        status: BookingStatus.CANCELLED,
-      } as any);
+      jest
+        .mocked(prisma.booking.findUnique)
+        .mockResolvedValue(mockBooking({ status: BookingStatus.CANCELLED }));
       await expect(
         service.updateStatus('1', { status: BookingStatus.COMPLETED }),
       ).rejects.toThrow(
@@ -282,13 +320,15 @@ describe('BookingsService', () => {
     });
 
     it('should correctly update status', async () => {
-      jest.mocked(prisma.booking.findUnique).mockResolvedValue({
-        status: BookingStatus.PENDING,
-      } as any);
-      jest.mocked(prisma.booking.update).mockResolvedValue({
-        status: BookingStatus.CONFIRMED,
-        service: { price: new Prisma.Decimal('10') },
-      } as any);
+      jest
+        .mocked(prisma.booking.findUnique)
+        .mockResolvedValue(mockBooking({ status: BookingStatus.PENDING }));
+      jest.mocked(prisma.booking.update).mockResolvedValue(
+        mockBooking({
+          status: BookingStatus.CONFIRMED,
+          service: { price: new Prisma.Decimal('10') },
+        }),
+      );
 
       const result = await service.updateStatus('1', {
         status: BookingStatus.CONFIRMED,
@@ -304,22 +344,24 @@ describe('BookingsService', () => {
 
   describe('cancel', () => {
     it('should throw BadRequestException if booking is completed', async () => {
-      jest.mocked(prisma.booking.findUnique).mockResolvedValue({
-        status: BookingStatus.COMPLETED,
-      } as any);
+      jest
+        .mocked(prisma.booking.findUnique)
+        .mockResolvedValue(mockBooking({ status: BookingStatus.COMPLETED }));
       await expect(service.cancel('1')).rejects.toThrow(
         new BadRequestException('Completed bookings cannot be cancelled'),
       );
     });
 
     it('should correctly cancel booking', async () => {
-      jest.mocked(prisma.booking.findUnique).mockResolvedValue({
-        status: BookingStatus.PENDING,
-      } as any);
-      jest.mocked(prisma.booking.update).mockResolvedValue({
-        status: BookingStatus.CANCELLED,
-        service: { price: new Prisma.Decimal('10') },
-      } as any);
+      jest
+        .mocked(prisma.booking.findUnique)
+        .mockResolvedValue(mockBooking({ status: BookingStatus.PENDING }));
+      jest.mocked(prisma.booking.update).mockResolvedValue(
+        mockBooking({
+          status: BookingStatus.CANCELLED,
+          service: { price: new Prisma.Decimal('10') },
+        }),
+      );
 
       const result = await service.cancel('1');
       expect(jest.mocked(prisma.booking.update)).toHaveBeenCalledWith({

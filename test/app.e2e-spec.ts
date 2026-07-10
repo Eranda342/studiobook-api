@@ -96,7 +96,8 @@ describe('StudioBook API (e2e)', () => {
     await prisma.service.deleteMany();
     await prisma.user.deleteMany();
 
-    await prisma.$disconnect();
+    // app.close() triggers PrismaService.onModuleDestroy which disconnects
+    // Prisma and ends the pg Pool — no manual $disconnect needed.
     await app.close();
   });
 
