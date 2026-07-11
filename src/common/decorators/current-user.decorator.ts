@@ -1,12 +1,13 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 import { User } from '@prisma/client';
 
+type AuthenticatedRequest = {
+  user: Omit<User, 'password'>;
+};
+
 export const CurrentUser = createParamDecorator(
-  (data: unknown, ctx: ExecutionContext): Omit<User, 'password'> => {
-    const request = ctx.switchToHttp().getRequest();
+  (_data: unknown, ctx: ExecutionContext): Omit<User, 'password'> => {
+    const request = ctx.switchToHttp().getRequest<AuthenticatedRequest>();
     return request.user;
   },
 );

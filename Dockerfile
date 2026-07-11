@@ -12,7 +12,7 @@ COPY tsconfig.json .
 COPY tsconfig.build.json .
 COPY src/ src/
 
-RUN DATABASE_URL="postgresql://postgres:postgres@localhost:5432/studiobook_db?schema=public" npx prisma generate
+RUN npx prisma generate
 RUN npm run build
 
 FROM node:22-bookworm-slim AS runtime
