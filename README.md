@@ -372,6 +372,17 @@ studiobook-api/
 - Booking availability is determined by exact service/date/time collision only
 - Service deletion is blocked when bookings exist (any status)
 
+## Future Improvements
+
+- Add role-based access control for administrators and studio staff.
+- Implement refresh-token authentication and token revocation.
+- Add duration-aware availability checks and studio operating hours.
+- Send email notifications for booking confirmations and cancellations.
+- Add rate limiting and request throttling.
+- Add audit logging for service and booking changes.
+- Configure a CI/CD workflow for automated linting, testing, and deployment.
+- Deploy the API and PostgreSQL database to a managed cloud environment.
+
 ## Additional Documentation
 
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — system design and request lifecycle
